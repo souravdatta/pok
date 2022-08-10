@@ -1,0 +1,7 @@
+? (fn fact dup 1 = (fn _ pop) (fn _ dup rot * swap 1 - fact) ifelse)
+? (fn factorial 1 swap fact)
+
+? 10 factorial
+(3628800)
+
+
