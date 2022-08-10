@@ -550,29 +550,25 @@
       (if (and
 	   (not (null stack))
 	   (>= (length stack) n))
-	  (let ((result
-		  (apply fn
-			 (reverse
-			  (subseq stack
-				  0
-				  (if fullstack
+	  (let ((newstack
+		  (if fullstack nil (drop n stack)))
+		(result
+		   (apply fn
+			  (reverse
+			   (subseq stack
+				   0
+				   (if fullstack
 				      (length stack)
 				      n))))))
 	    (cond
 	      ((pok-do-p result)
-	       (let ((result2 (pok-eval (second result)
-					nil
-					env)))
-		 (list
-		  (append
-		   (if (listp (first result2))
-		       (first result2) (list (first result2)))
-		   (if fullstack nil (drop n stack)))
-		  (append (second result2) env))))
+	       (pok-eval (second result)
+			 newstack
+			 env))
 	      (t (list
 		  (append
 		   (if (listp result) result (list result))
-		   (if fullstack nil (drop n stack)))
+		   newstack)
 		  env))))
 	  (error "not enough args for this operation"))))
 
@@ -603,6 +599,7 @@
     ((eq fn 'scan) (pok-apply-n 2 #'pok-scan))
     ((eq fn 'map) (pok-apply-n 2 #'pok-map))
     ((eq fn 'if) (pok-apply-n 2 #'pok-if))
+    ((eq fn 'until) (pok-apply-n 2 #'pok-until))
     ((eq fn 'ifelse) (pok-apply-n 3 #'pok-if-else))
     ((pok-user-defn-p fn env)
      (pok-apply-fn (cdr (assoc fn env))))
