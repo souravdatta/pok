@@ -497,6 +497,50 @@
       (list 'do
 	    (pok-fn fn2))))
 
+(defmethod pok-min ((p pok-list)
+		    (q pok-list))
+  (make-pok-obj
+   (mapcar #'min
+	   (make-cl-obj q)
+	   (make-cl-obj p))))
+
+(defmethod pok-min ((p pok-scalar)
+		    (q pok-list))
+  (pok-min (pok-repeat p (pok-count q))
+	   q))
+
+(defmethod pok-min ((p pok-list)
+		    (q pok-scalar))
+  (pok-min p
+	   (pok-repeat q (pok-count p))))
+
+(defmethod pok-min ((p pok-scalar)
+		    (q pok-scalar))
+  (make-pok-obj (min (pok-scalar-val p)
+		     (pok-scalar-val q))))
+
+(defmethod pok-max ((p pok-list)
+		    (q pok-list))
+  (make-pok-obj
+   (mapcar #'max
+	   (make-cl-obj q)
+	   (make-cl-obj p))))
+
+(defmethod pok-max ((p pok-scalar)
+		    (q pok-list))
+  (pok-max (pok-repeat p (pok-count q))
+	   q))
+
+(defmethod pok-max ((p pok-list)
+		    (q pok-scalar))
+  (pok-max p
+	   (pok-repeat q (pok-count p))))
+
+(defmethod pok-max ((p pok-scalar)
+		    (q pok-scalar))
+  (make-pok-obj (max (pok-scalar-val p)
+		     (pok-scalar-val q))))
+
 ;; evaluating
 
 (defun pok-scalar-p (x)
@@ -601,6 +645,8 @@
     ((eq fn 'if) (pok-apply-n 2 #'pok-if))
     ((eq fn 'until) (pok-apply-n 2 #'pok-until))
     ((eq fn 'ifelse) (pok-apply-n 3 #'pok-if-else))
+    ((eq fn 'min) (pok-apply-n 2 #'pok-min))
+    ((eq fn 'max) (pok-apply-n 2 #'pok-max))
     ((pok-user-defn-p fn env)
      (pok-apply-fn (cdr (assoc fn env))))
     (t (error "no def found for this op"))))
