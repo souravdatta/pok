@@ -144,21 +144,22 @@
 (defmethod pok-plus ((p pok-list)
 		     (q pok-list))
   (let ((args (pok-match-lists p q)))
-    (apply #'make-pok-list (loop for x in (pok-list-elems (first args))
-				 for y in (pok-list-elems (second args))
-				 collect (make-pok-obj
-					  (+ (pok-scalar-val x)
-					     (pok-scalar-val y)))))))
+    (apply #'make-pok-list
+	   (loop for x in (pok-list-elems (first args))
+		 for y in (pok-list-elems (second args))
+		 collect (make-pok-obj
+			  (+ (pok-scalar-val x)
+			     (pok-scalar-val y)))))))
 
 (defmethod pok-plus ((p pok-scalar)
 		     (q pok-list))
-  (pok-plus (make-pok-list p)
+  (pok-plus (pok-repeat p (pok-count q))
 	    q))
 
 (defmethod pok-plus ((p pok-list)
 		     (q pok-scalar))
   (pok-plus p
-	    (make-pok-list q)))
+	    (pok-repeat q (pok-count p))))
 
 (defmethod pok-plus ((p pok-scalar)
 		     (q pok-scalar))
@@ -179,13 +180,13 @@
 
 (defmethod pok-minus ((p pok-scalar)
 		      (q pok-list))
-  (pok-minus (make-pok-list p)
+  (pok-minus (pok-repeat p (pok-count q))
 	     q))
 
 (defmethod pok-minus ((p pok-list)
 		     (q pok-scalar))
   (pok-minus p
-	     (make-pok-list q)))
+	     (pok-repeat q (pok-count p))))
 
 (defmethod pok-minus ((p pok-scalar)
 		      (q pok-scalar))
@@ -206,13 +207,13 @@
 
 (defmethod pok-mult ((p pok-scalar)
 		     (q pok-list))
-  (pok-mult (make-pok-list p)
+  (pok-mult (pok-repeat p (pok-count q))
 	    q))
 
 (defmethod pok-mult ((p pok-list)
 		     (q pok-scalar))
   (pok-mult p
-	    (make-pok-list q)))
+	    (pok-repeat q (pok-count p))))
 
 (defmethod pok-mult ((p pok-scalar)
 		     (q pok-scalar))
@@ -233,13 +234,13 @@
 
 (defmethod pok-div ((p pok-scalar)
 		     (q pok-list))
-  (pok-div (make-pok-list p)
-	    q))
+  (pok-div (pok-repeat p (pok-count q))
+	   q))
 
 (defmethod pok-div ((p pok-list)
 		    (q pok-scalar))
   (pok-div p
-	   (make-pok-list q)))
+	   (pok-repeat q (pok-count p))))
 
 (defmethod pok-div ((p pok-scalar)
 		    (q pok-scalar))
@@ -281,7 +282,7 @@
 	   (pok-list-elems p))))
 
 (defmethod pok-eq ((p pok-scalar)
-		    (q pok-scalar))
+		   (q pok-scalar))
   (make-pok-obj
    (if (equal (pok-scalar-val p)
 	      (pok-scalar-val q))
@@ -289,7 +290,7 @@
        0)))
 
 (defmethod pok-eq ((p pok-list)
-		    (q pok-list))
+		   (q pok-list))
   (if (= (pok-count p) (pok-count q))
       (make-pok-obj
        (mapcar #'(lambda (x y)
@@ -554,7 +555,9 @@
 		 (pok-list-elems q))))
 
 (defmethod pok-iota ((p pok-scalar))
-  (make-pok-obj (loop for i from 0 to (pok-scalar-val p)
+  (make-pok-obj (loop for i from 0 to (-
+				       (pok-scalar-val p)
+				       1)
 		      collect i)))
 
 ;; evaluating
@@ -665,6 +668,10 @@
     ((eq fn 'max) (pok-apply-n 2 #'pok-max))
     ((eq fn 'elem) (pok-apply-n 2 #'pok-elem))
     ((eq fn 'iota) (pok-apply-n 1 #'pok-iota))
+    ((eq fn 'repeat) (pok-apply-n 2 #'pok-repeat))
+    ((eq fn 'at) (pok-apply-n 2 #'pok-at))
+    ((eq fn 'append) (pok-apply-n 2 #'pok-append-lists))
+    ((eq fn 'sublist) (pok-apply-n 3 #'pok-sublist))
     ((pok-user-defn-p fn env)
      (pok-apply-fn (cdr (assoc fn env))))
     (t (error "no def found for this op"))))
@@ -711,17 +718,20 @@
 (defun pok-repl ()
   (format t "pok repl~%")
   (let ((data '(nil nil)))
-    (loop
-      (format t "? ")
-      (let* ((input (read-line))
-	     (line (with-input-from-string
-		       (s (format nil "(~A)" input))
-		     (read s))))
-	(setf data (pok-eval
-		    line
-		    (first data)
-		    (second data)))
-	(format t
-		"~A~%"
-		(mapcar #'show
-			(reverse (first data))))))))
+    (loop (handler-case
+	      (progn
+		(format t "? ")
+		(let* ((input (read-line))
+		       (line (with-input-from-string
+				 (s (format nil "(~A)" input))
+			       (read s))))
+		  (setf data (pok-eval
+			      line
+			(first data)
+			(second data)))
+		  (format t
+			  "~A~%"
+			  (mapcar #'show
+				  (reverse (first data))))))
+	    (error (c)
+	      (format t "error ~A~%" c))))))
