@@ -1,8 +1,10 @@
 ? (fn fact dup 1 = (fn _ pop) (fn _ dup rot * swap 1 - fact) ifelse)
 ? (fn factorial 1 swap fact)
 
-? 10 factorial
-(3628800)
+0 factorial => (3628800)
 
-? (1 2 3 4 5) ?factorial map
-((1 2 6 24 120))
+(1 2 3 4 5) ?factorial map => ((1 2 6 24 120))
+
+; Find target sales from sales and buys
+(fn sales swap sums min deltas)
+(2 4 8 10 13 20 22 27) 26 sales => ((2 4 8 10 2 0 0 0))
