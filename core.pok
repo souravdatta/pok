@@ -1,4 +1,5 @@
 (fn square dup *)
 (fn sum ?+ over)
+(fn sums ?+ scan)
 (fn fact1 dup 1 = (fn _ pop) (fn _ dup rot * swap 1 - fact1) ifelse)
 (fn factorial 1 swap fact1)
