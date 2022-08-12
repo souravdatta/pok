@@ -560,6 +560,25 @@
 				       1)
 		      collect i)))
 
+(defmethod pok-gather ((p pok-list)
+		       (tk pok-scalar)
+		       (drp pok-scalar))
+  (make-pok-obj
+   (scans (pok-scalar-val tk)
+	  (pok-scalar-val drp)
+	  (make-cl-obj p))))
+
+(defmethod pok-deltas ((p pok-list))
+  (let ((lst (make-cl-obj p)))
+    (if (not (null p))
+	(make-pok-obj
+	 (cons
+	  (first lst)
+	  (mapcar #'(lambda (p) (* -1 (apply #'- p)))
+		  (remove-if #'(lambda (x) (< (length x) 2))
+			     (scans 2 1 lst)))))
+	p)))
+
 ;; evaluating
 
 (defun pok-load-file (file stack env)
@@ -607,6 +626,18 @@
       ((= len n) '())
       ((> len n) (subseq lst n))
       (t lst))))
+
+(defun take (n lst)
+  (subseq lst 0 n))
+
+(defun scans (m n lst &optional (result nil))
+  (cond
+    ((null lst) (reverse result))
+    ((or
+      (< (length lst) n)
+      (< (length lst) m))
+     (scans m n nil (cons lst result)))
+    (t (scans m n (drop n lst) (cons (take m lst) result)))))
 
 (defun pok-do-p (x)
   (and
@@ -698,6 +729,8 @@
     ((eq fn 'at) (pok-apply-n 2 #'pok-at))
     ((eq fn 'append) (pok-apply-n 2 #'pok-append-lists))
     ((eq fn 'sublist) (pok-apply-n 3 #'pok-sublist))
+    ((eq fn 'gather) (pok-apply-n 3 #'pok-gather))
+    ((eq fn 'deltas) (pok-apply-n 1 #'pok-deltas))
     ((pok-user-defn-p fn env)
      (pok-apply-fn (cdr (assoc fn env))))
     (t (error "no def found for this op"))))
