@@ -416,7 +416,7 @@
 			 collect (subseq (pok-list-elems lst)
 					 0
 					 i))))
-	(list 'do
+	(list 'do-local
 	      (append
 	       (apply
 		#'append
@@ -430,7 +430,7 @@
 
 (defmethod pok-map ((lst pok-list)
 		    (fn pok-lambda))
-  (list 'do
+  (list 'do-local
 	(append
 	 (apply
 	  #'append
@@ -442,7 +442,7 @@
 
 (defmethod pok-map ((lst pok-list)
 		    sym)
-  (list 'do
+  (list 'do-local
 	(append
 	 (apply
 	  #'append
@@ -602,6 +602,12 @@
    (eq (first x) 'do)
    (listp (second x))))
 
+(defun pok-do-local-p (x)
+  (and
+   (listp x)
+   (eq (first x) 'do-local)
+   (listp (second x))))
+
 (defun pok-lambda-p (x)
   (and
    (listp x)
@@ -628,6 +634,14 @@
 	       (pok-eval (second result)
 			 newstack
 			 env))
+	      ((pok-do-local-p result)
+	       (let ((result
+		       (pok-eval (second result)
+				 nil
+				 env)))
+		 (list
+		  (append (first result) newstack)
+		  (second result))))
 	      (t (list
 		  (append
 		   (if (listp result) result (list result))
@@ -720,7 +734,7 @@
   (let ((data '(nil nil)))
     (loop (handler-case
 	      (progn
-		(format t "? ")
+		(format t "    ")
 		(let* ((input (read-line))
 		       (line (with-input-from-string
 				 (s (format nil "(~A)" input))
