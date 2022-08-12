@@ -562,6 +562,18 @@
 
 ;; evaluating
 
+(defun pok-load-file (file stack env)
+  (dolist (expr (with-open-file (stream file)
+		  (loop for line = (read-line stream nil)
+			while line
+			collect (with-input-from-string
+				    (s (format nil "(~A)" line))
+				  (read s)))))
+    (let ((result (pok-eval expr stack env)))
+      (setf stack (first result))
+      (setf env (second result))))
+  (list stack env))
+
 (defun pok-scalar-p (x)
   (numberp x))
 
@@ -731,7 +743,7 @@
 
 (defun pok-repl ()
   (format t "pok repl~%")
-  (let ((data '(nil nil)))
+  (let ((data (pok-load-file "core.pok" nil nil)))
     (loop (handler-case
 	      (progn
 		(format t "    ")
