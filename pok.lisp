@@ -541,6 +541,18 @@
   (make-pok-obj (max (pok-scalar-val p)
 		     (pok-scalar-val q))))
 
+(defmethod pok-elem ((p pok-list)
+		     (q pok-scalar))
+  (nth (pok-scalar-val q)
+       (pok-list-elems p)))
+
+(defmethod pok-elem ((p pok-list)
+		     (q pok-list))
+  (apply #'make-pok-list
+	 (mapcar #'(lambda (i)
+		     (pok-elem p i))
+		 (pok-list-elems q))))
+
 ;; evaluating
 
 (defun pok-scalar-p (x)
@@ -647,6 +659,7 @@
     ((eq fn 'ifelse) (pok-apply-n 3 #'pok-if-else))
     ((eq fn 'min) (pok-apply-n 2 #'pok-min))
     ((eq fn 'max) (pok-apply-n 2 #'pok-max))
+    ((eq fn 'elem) (pok-apply-n 2 #'pok-elem))
     ((pok-user-defn-p fn env)
      (pok-apply-fn (cdr (assoc fn env))))
     (t (error "no def found for this op"))))
