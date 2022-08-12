@@ -553,6 +553,10 @@
 		     (pok-elem p i))
 		 (pok-list-elems q))))
 
+(defmethod pok-iota ((p pok-scalar))
+  (make-pok-obj (loop for i from 0 to (pok-scalar-val p)
+		      collect i)))
+
 ;; evaluating
 
 (defun pok-scalar-p (x)
@@ -660,6 +664,7 @@
     ((eq fn 'min) (pok-apply-n 2 #'pok-min))
     ((eq fn 'max) (pok-apply-n 2 #'pok-max))
     ((eq fn 'elem) (pok-apply-n 2 #'pok-elem))
+    ((eq fn 'iota) (pok-apply-n 1 #'pok-iota))
     ((pok-user-defn-p fn env)
      (pok-apply-fn (cdr (assoc fn env))))
     (t (error "no def found for this op"))))
